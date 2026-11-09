@@ -61,7 +61,7 @@ class Settings:
     def minimum_wall(self):
         r=self.diameter/2; inner=self.bore/2
         limits={'A':.84*r-inner-.5,
-                'B':min(r-.85-inner,r-.5-inner-.5),
+                'B':min(r-.85-inner-.5,r-.5-inner-.5),
                 'C':math.cos(math.pi/6)*(r-.6)-inner-.5,
                 'D':min(r-self.depth-inner,r-.5-self.depth-inner-.5),
                 'E':.78*r*math.cos(math.pi/12)-inner-.5,

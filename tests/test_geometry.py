@@ -34,7 +34,8 @@ def test_real_geometry_and_exports(shape,changed,tmp_path):
     assert abs(metrics(loaded)['volume']-info['volume'])<.01
 
 @pytest.mark.parametrize('bad',[{'shape':'Z'},{'height':float('nan')},{'bore':True},{'twist':float('inf')},
-                                {'unknown':5},{'diameter':1},{'shape':[]},{'diameter':12,'bore':10}])
+                                {'unknown':5},{'diameter':1},{'shape':[]},{'diameter':12,'bore':10},
+                                {'shape':'B','diameter':12,'bore':7.3}])
 def test_bad_settings(bad):
     with pytest.raises(UserError):Settings.read(bad)
 

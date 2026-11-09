@@ -7,6 +7,7 @@ from pathlib import Path
 import io,json,mimetypes,secrets,sys,tempfile,threading,time,webbrowser,zipfile,logging
 from urllib.parse import urlsplit
 from .cad import Settings, UserError, NAMES, build, metrics, export
+from . import __version__
 
 BASE=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parents[1]))
 log=logging.getLogger('bead_studio')
@@ -96,7 +97,7 @@ class Handler(BaseHTTPRequestHandler):
         path=self.route()
         if path is None:return
         if path=='api/health':
-            self.send(200,{'ok':True,'version':'1.0.0'}); return
+            self.send(200,{'ok':True,'version':__version__}); return
         if path.startswith('files/'):
             parts=path.split('/')
             if len(parts)!=3 or parts[2] not in ['model.stl','model.step','fusion.zip']:
