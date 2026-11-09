@@ -1,0 +1,2 @@
+This folder is reserved for DLL dependencies used by the OCP Python wheel.
+Dependency notices and licenses are distributed in the LICENSES folder.

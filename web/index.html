@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Мастер бусин — паракорд 550</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="./" aria-label="Мастер бусин, главная">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M8 12 20 5 32 12v16l-12 7-12-7Z"/><ellipse cx="20" cy="12" rx="5" ry="3"/></svg>
+    <span>Мастер бусин<small>ДЛЯ ПАРАКОРДА 550</small></span>
+  </a>
+  <span class="tagline">От идеи до печати — без 3D-моделирования</span>
+  <div class="header-actions"><button class="quiet" id="help">Как пользоваться</button><button class="quiet" id="stop">Выйти</button></div>
+</header>
+<main class="workspace">
+  <aside class="settings panel">
+    <div class="section-title"><span class="step">1</span><h1>Выберите форму</h1><span class="count">8 вариантов</span></div>
+    <div id="shapes" class="shapes" role="group" aria-label="Форма бусины"></div>
+    <div class="section-title size-title"><span class="step">2</span><h2>Задайте размеры</h2><button class="link" id="reset">Сбросить</button></div>
+    <div id="size-controls"></div>
+    <p class="hint">Все размеры в миллиметрах. Отверстие проходит насквозь.</p>
+    <details id="details"><summary>Детали формы <span>+</span></summary><div id="detail-controls"></div><p class="hint" id="detail-note"></p></details>
+    <button id="refresh" class="outline wide">Обновить модель</button>
+    <p class="auto-note">Предпросмотр обновляется автоматически</p>
+  </aside>
+
+  <section class="viewer" aria-label="Объёмный просмотр модели">
+    <div class="viewer-top"><div><span class="eyebrow">ВАША МОДЕЛЬ</span><h2 id="model-name">Гладкая бочка</h2></div>
+      <div class="view-tools"><button id="grid-toggle" class="tool" aria-label="Показать или скрыть сетку" aria-pressed="true">Сетка</button><button id="home-view" class="tool" aria-label="Вернуть исходный ракурс">Вид по умолчанию</button></div>
+    </div>
+    <div id="canvas-wrap"><canvas id="canvas" aria-label="3D-модель. Вращайте мышью; колесо меняет масштаб."></canvas></div>
+    <div class="status-wrap"><span id="status" role="status" aria-live="polite">Подготавливаем модель…</span></div>
+    <div id="error" role="alert" hidden></div>
+    <div class="viewer-bottom"><div class="swatches" aria-label="Цвет предпросмотра"><button data-color="#c17f4e" class="swatch copper active" aria-label="Медный" aria-pressed="true"></button><button data-color="#5f7383" class="swatch steel" aria-label="Стальной" aria-pressed="false"></button><button data-color="#34423b" class="swatch olive" aria-label="Оливковый" aria-pressed="false"></button><button data-color="#d4c5a6" class="swatch sand" aria-label="Песочный" aria-pressed="false"></button></div><span class="orbit-hint">Потяните, чтобы повернуть · колесо — масштаб</span></div>
+  </section>
+
+  <aside class="export panel">
+    <div class="section-title"><span class="step">3</span><h2>Сохраните модель</h2></div>
+    <p class="intro">Бусина готова к следующему шагу. Выберите, что хотите сделать.</p>
+    <button id="download-stl" class="primary wide" disabled><span>↓ Файл для печати</span><small>STL · для любого слайсера</small></button>
+    <button id="download-step" class="outline wide" disabled><span>Открыть в 3D-редакторе</span><small>STEP · точное твёрдое тело</small></button>
+    <button id="download-fusion" class="outline wide" disabled><span>Редактировать в Fusion</span><small>ZIP · проект с параметрами</small></button>
+    <div class="model-info"><div class="info-title">О модели <span id="verified" class="verified">Ожидание</span></div><dl><dt>Габариты</dt><dd id="dimensions">—</dd><dt>Отверстие</dt><dd id="bore-value">—</dd><dt>Объём</dt><dd id="volume">—</dd><dt>Запас стенки</dt><dd id="wall">—</dd></dl><p class="hint">Запас стенки — консервативная оценка по размерам формы.</p></div>
+    <div class="project-actions"><button id="save-project" class="link">Сохранить настройки</button><button id="load-project" class="link">Загрузить настройки</button><input id="project-file" type="file" accept=".json,.bead" hidden></div>
+    <div class="print-tip"><span class="tip-icon">i</span><p>Сначала напечатайте одну бусину и проверьте свой шнур. Точность отверстия зависит от принтера.</p></div>
+  </aside>
+</main>
+<footer><span><i class="local-dot"></i>Работает локально · интернет не нужен</span><span>Миллиметры · масштаб печати 100%</span></footer>
+<dialog id="help-dialog"><button class="dialog-close" id="help-close" aria-label="Закрыть инструкцию">×</button><span class="eyebrow">НАЧНЁМ С ПРОСТОГО</span><h2>Ваша первая бусина</h2><ol><li><strong>Выберите форму.</strong> Все восемь вариантов уже готовы к настройке.</li><li><strong>Задайте ширину, высоту и отверстие.</strong> Потяните ползунок или введите число. Модель обновится сама.</li><li><strong>Нажмите «Файл для печати».</strong> Откройте STL в вашем слайсере: миллиметры, 100%, отверстие вертикально.</li></ol><p>STEP подходит для дальнейшей работы в 3D-редакторе. Кнопка Fusion скачивает скрипт с вашими параметрами; внутри ZIP есть инструкция запуска. Это не готовый файл F3D.</p><p>Чтобы продолжить позже, сохраните настройки. Файл можно загрузить обратно в эту программу.</p><p class="hint">Для выхода используйте кнопку «Выйти». После закрытия всех вкладок программа завершится примерно через 5 минут.</p><button id="help-done" class="primary">Понятно, создаём</button></dialog>
+<div id="toast" role="status" hidden></div>
+</body>
+</html>

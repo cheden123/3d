@@ -1,0 +1,62 @@
+name: Check and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: python -m pip install -r requirements-dev.txt
+      - run: npm ci
+      - run: npm run vendor
+      - run: python -m pytest -q
+      - run: npx playwright install chromium
+      - run: npm run test:ui
+        env:
+          BEAD_PYTHON: python
+      - run: python -m PyInstaller --noconfirm BeadStudio.spec
+      - name: Test portable executable
+        run: npm run test:ui
+        env:
+          BEAD_EXE: dist/BeadStudio/BeadStudio.exe
+      - run: python tools/package_release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BeadStudio-Windows-x64
+          path: |
+            dist/BeadStudio-Windows-x64.zip
+            dist/BeadStudio-Windows-x64.zip.sha256
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interface-preview
+          path: tests/artifacts/
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: BeadStudio-Windows-x64
+          path: release
+      - name: Publish Windows application
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --title "Мастер бусин $GITHUB_REF_NAME" --notes "Windows x64: распакуйте весь ZIP и запустите BeadStudio.exe. Восемь форм, 3D-просмотр, STL, STEP и параметрический проект Fusion."

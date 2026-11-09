@@ -1,0 +1,8 @@
+{
+  "autodeskProduct": "Fusion360",
+  "type": "script",
+  "author": "Codex",
+  "description": {"": "Eight editable parametric paracord 550 beads, A-H"},
+  "version": "1.0.0",
+  "supportedOS": "windows|mac"
+}

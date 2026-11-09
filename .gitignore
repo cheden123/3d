@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+build/
+dist/
+*.log
+*.spec
+!BeadStudio.spec
+*.png
+!web/*.png
+tests/artifacts/
+smoke.stl
+smoke.step
