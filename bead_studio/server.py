@@ -21,10 +21,15 @@ def fusion_archive(settings):
         z.writestr('Paracord550/selection.json',json.dumps({'shape':settings.shape,'values':settings.parameters()}))
         z.writestr('settings.bead.json',json.dumps({'version':1,'settings':asdict(settings)},ensure_ascii=False,indent=2))
         z.writestr('START_HERE.txt',
-                  'Fusion: Utilities > Scripts and Add-Ins (Shift+S) > Scripts > +.\n'
-                  'Add the Paracord550 folder, then Run. No external Python is required.\n'
-                  'Modify > Change Parameters edits dimensions. F3D is saved to fusion_exports.\n'
-                  'This is an editable script project, not a pre-built F3D.\n')
+                  'КАК ОТКРЫТЬ ВАШУ БУСИНУ В AUTODESK FUSION\n\n'
+                  '1. Распакуйте весь ZIP в обычную папку.\n'
+                  '2. В Fusion откройте Утилиты (Utilities) > Скрипты и надстройки (Scripts and Add-Ins), или Shift+S.\n'
+                  '3. На вкладке Скрипты (Scripts) нажмите + и добавьте папку Paracord550.\n'
+                  '4. Выберите Paracord550 и нажмите Выполнить (Run). Отдельный Python не нужен.\n'
+                  '5. Размеры меняются через Изменить (Modify) > Изменить параметры (Change Parameters).\n'
+                  'Файл F3D сохраняется рядом со скриптом в папке fusion_exports.\n\n'
+                  'Это проект-скрипт с выбранной формой и размерами. Готовый F3D создаётся при запуске.\n'
+                  'Выполнение непосредственно в Fusion отдельно не проверялось.\n')
     return memory.getvalue()
 
 class Studio(ThreadingHTTPServer):
