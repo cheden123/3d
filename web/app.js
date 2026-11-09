@@ -8,6 +8,7 @@ const forms=[['A','Гладкая бочка','Плавные линии'],['B',
 const paths={A:'M8 8Q1 23 8 39Q16 44 24 39Q31 23 24 8Z',B:'M6 8H26V40H6ZM10 9V39M16 9V39M22 9V39',C:'M5 11L16 5 27 11V37L16 43 5 37ZM16 14V43M5 11L16 17 27 11',D:'M6 8H26V40H6ZM6 35 26 14M6 23 20 8M12 40 26 26',E:'M9 7H23L28 17V33L23 41H9L4 33V17ZM9 7 12 17V33L9 41M23 7 20 17V33L23 41M4 17H28M4 33H28',F:'M5 10 16 5 27 10V38L16 43 5 38ZM11 16V35M11 17 21 23M11 25 21 31',G:'M6 8H26V40H6ZM6 15H26M6 18H26M6 23H26M6 26H26M6 31H26M6 34H26',H:'M10 8H22L28 40H4Z'};
 let settings={...defaults},sequence=0,timer,result=null,mesh=null,renderer=null,controls=null,scene,camera,grid,material;
 let toastTimer;
+let render=()=>{};
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4500);}
 function setStatus(text,busy=false){$('status').textContent=text;$('status').classList.toggle('busy',busy);}
 function downloads(enabled){for(const id of ['download-stl','download-step','download-fusion'])$(id).disabled=!enabled;}
@@ -36,17 +37,17 @@ function home(){if(!camera)return;controls.target.set(0,0,8);camera.position.set
 try{
  renderer=new THREE.WebGLRenderer({canvas:$('canvas'),antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setClearColor(0,0);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
  scene=new THREE.Scene();scene.up.set(0,0,1);camera=new THREE.PerspectiveCamera(34,1,.1,300);camera.up.set(0,0,1);
- controls=new OrbitControls(camera,$('canvas'));controls.enableDamping=true;controls.minDistance=18;controls.maxDistance=110;controls.maxPolarAngle=Math.PI*.86;home();
+ controls=new OrbitControls(camera,$('canvas'));controls.enableDamping=false;controls.addEventListener('change',()=>render());controls.minDistance=18;controls.maxDistance=110;controls.maxPolarAngle=Math.PI*.86;home();
  scene.add(new THREE.HemisphereLight(0xffffff,0x8b8679,2.5));
  for(const [color,power,pos] of [[0xfff3df,4,[20,-35,45]],[0xffffff,2,[-30,10,20]],[0xe6f1f6,3,[0,30,40]]]){const l=new THREE.DirectionalLight(color,power);l.position.set(...pos);scene.add(l);}
  grid=new THREE.GridHelper(72,24,0xd4d4c9,0xe0e0d7);grid.rotation.x=Math.PI/2;grid.position.z=-.04;grid.material.transparent=true;grid.material.opacity=.6;scene.add(grid);
  material=new THREE.MeshStandardMaterial({color:'#c17f4e',metalness:.38,roughness:.43});
- new ResizeObserver(()=>{const box=$('canvas-wrap').getBoundingClientRect();renderer.setSize(box.width,box.height,false);camera.aspect=box.width/box.height;camera.updateProjectionMatrix();}).observe($('canvas-wrap'));
- function frame(){controls.update();renderer.render(scene,camera);requestAnimationFrame(frame);}frame();
+ render=()=>renderer.render(scene,camera);
+ new ResizeObserver(()=>{const box=$('canvas-wrap').getBoundingClientRect();renderer.setSize(box.width,box.height,false);camera.aspect=box.width/box.height;camera.updateProjectionMatrix();render();}).observe($('canvas-wrap'));
 }catch(e){$('canvas-wrap').textContent='3D-просмотр недоступен в этом браузере. Создание и сохранение файлов продолжают работать.';}
 $('home-view').onclick=home;
-$('grid-toggle').onclick=()=>{if(grid){grid.visible=!grid.visible;$('grid-toggle').setAttribute('aria-pressed',grid.visible);}};
-for(const b of document.querySelectorAll('.swatch'))b.onclick=()=>{if(material)material.color.set(b.dataset.color);for(const s of document.querySelectorAll('.swatch')){s.classList.toggle('active',s===b);s.setAttribute('aria-pressed',s===b);}};
+$('grid-toggle').onclick=()=>{if(grid){grid.visible=!grid.visible;$('grid-toggle').setAttribute('aria-pressed',grid.visible);render();}};
+for(const b of document.querySelectorAll('.swatch'))b.onclick=()=>{if(material)material.color.set(b.dataset.color);for(const s of document.querySelectorAll('.swatch')){s.classList.toggle('active',s===b);s.setAttribute('aria-pressed',s===b);}render();};
 
 async function post(path,data){const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const json=await response.json();if(!response.ok)throw new Error(json.error||'Не удалось выполнить действие.');return json;}
 function changed(){sequence++;result=null;downloads(false);$('verified').textContent='Обновляется';$('error').hidden=true;setStatus('Обновляем модель…',true);clearTimeout(timer);const id=sequence;timer=setTimeout(()=>generate(id),500);}
@@ -59,7 +60,7 @@ async function generate(id){
   let geometry;
   if(renderer){const response=await fetch(`files/${generated.id}/model.stl`);if(!response.ok)throw new Error('Не удалось загрузить предпросмотр. Обновите модель.');geometry=new STLLoader().parse(await response.arrayBuffer());}
   if(id!==sequence){geometry?.dispose();return;}
-  if(renderer){if(mesh){scene.remove(mesh);mesh.geometry.dispose();}mesh=new THREE.Mesh(geometry,material);scene.add(mesh);}
+  if(renderer){if(mesh){scene.remove(mesh);mesh.geometry.dispose();}mesh=new THREE.Mesh(geometry,material);scene.add(mesh);render();}
   result=generated;downloads(true);$('verified').textContent='✓ Цельное тело';
   $('dimensions').textContent=generated.dimensions.map(format).join(' × ')+' мм';$('bore-value').textContent=format(snapshot.bore)+' мм';$('volume').textContent=format(generated.volume/1000)+' см³';$('wall').textContent='≥ '+format(generated.wall)+' мм';
   setStatus('Модель готова · размеры проверены');
