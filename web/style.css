@@ -2,3 +2,19 @@
 
 /* Keep the shape chooser inside narrow sidebars. */
 .shapes{grid-template-columns:repeat(2,minmax(0,1fr))}.shape{min-width:0;gap:6px}.shape svg{width:24px}.shape span{min-width:0;font-size:10px;overflow-wrap:anywhere}.shape small{font-size:8px}@media(max-width:650px){.shapes{grid-template-columns:repeat(4,minmax(0,1fr))}.shape span{font-size:9px}}
+
+.catalog-filters{display:flex;gap:5px;margin:-6px 0 12px}
+.catalog-filters button{flex:1;min-width:0;border:1px solid var(--line);border-radius:6px;background:#fff;padding:8px 3px;font-size:10px;color:#637169}
+.catalog-filters button[aria-pressed=true]{background:#edf1e9;border-color:#a5b19f;color:#324b3c}
+.shape[hidden]{display:none}
+.shapes{padding:2px;align-content:start}
+.shape{padding:7px 5px;gap:5px;min-height:65px}
+.shape img{width:35px;height:40px;object-fit:contain;flex-shrink:0}
+.shape span{font-size:10px;line-height:1.4}
+.shape small{font-size:8px}
+@media(max-width:650px){
+ .catalog-filters button{font-size:12px;padding:10px 4px}
+ .shape{padding:6px 3px;gap:2px;min-height:83px}
+ .shape img{width:42px;height:42px}
+ .shape span{font-size:9px}
+}

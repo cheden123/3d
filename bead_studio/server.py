@@ -8,6 +8,7 @@ import io,json,mimetypes,secrets,sys,tempfile,threading,time,webbrowser,zipfile,
 from urllib.parse import urlsplit
 from .cad import Settings, UserError, NAMES, build, metrics, export
 from . import __version__
+from .model_spec import PRESETS
 
 BASE=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parents[1]))
 log=logging.getLogger('bead_studio')
@@ -103,6 +104,10 @@ class Handler(BaseHTTPRequestHandler):
         if path is None:return
         if path=='api/health':
             self.send(200,{'ok':True,'version':__version__}); return
+        if path=='api/catalog':
+            shapes = [dict(id=key, name=preset.name, description=preset.description, group=preset.group,
+                           diameter=preset.diameter, height=preset.height) for key,preset in PRESETS.items()]
+            self.send(200,{'shapes':shapes}); return
         if path.startswith('files/'):
             parts=path.split('/')
             if len(parts)!=3 or parts[2] not in ['model.stl','model.step','fusion.zip']:

@@ -65,4 +65,4 @@ jobs:
         run: >-
           gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY"
           --title "Мастер бусин $GITHUB_REF_NAME"
-          --notes "Windows x64: распакуйте весь ZIP и запустите BeadStudio.exe. Восемь форм, 3D-просмотр, STL, STEP и параметрический проект Fusion."
+          --notes "Windows x64. Распакуйте весь ZIP и запустите BeadStudio.exe. В каталоге 20 форм, включая 12 новых. Доступны 3D-просмотр, STL, STEP и проект Fusion."

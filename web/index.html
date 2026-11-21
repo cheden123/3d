@@ -17,7 +17,8 @@
 </header>
 <main class="workspace">
   <aside class="settings panel">
-    <div class="section-title"><span class="step">1</span><h1>Выберите форму</h1><span class="count">8 вариантов</span></div>
+    <div class="section-title"><span class="step">1</span><h1>Выберите форму</h1><span class="count" id="shape-count"></span></div>
+    <div class="catalog-filters" role="group" aria-label="Категория форм"><button data-group="basic" aria-pressed="true">Базовые</button><button data-group="textured" aria-pressed="false">С рельефом</button><button data-group="shaped" aria-pressed="false">Фигурные</button></div>
     <div id="shapes" class="shapes" role="group" aria-label="Форма бусины"></div>
     <div class="section-title size-title"><span class="step">2</span><h2>Задайте размеры</h2><button class="link" id="reset">Сбросить</button></div>
     <div id="size-controls"></div>
@@ -49,7 +50,7 @@
   </aside>
 </main>
 <footer><span><i class="local-dot"></i>Работает локально · интернет не нужен</span><span>Миллиметры · масштаб печати 100%</span></footer>
-<dialog id="help-dialog"><button class="dialog-close" id="help-close" aria-label="Закрыть инструкцию">×</button><span class="eyebrow">НАЧНЁМ С ПРОСТОГО</span><h2>Ваша первая бусина</h2><ol><li><strong>Выберите форму.</strong> Все восемь вариантов уже готовы к настройке.</li><li><strong>Задайте ширину, высоту и отверстие.</strong> Потяните ползунок или введите число. Модель обновится сама.</li><li><strong>Нажмите «Файл для печати».</strong> Откройте STL в вашем слайсере: миллиметры, 100%, отверстие вертикально.</li></ol><p>STEP подходит для дальнейшей работы в 3D-редакторе. Кнопка Fusion скачивает скрипт с вашими параметрами; внутри ZIP есть инструкция запуска. Это не готовый файл F3D.</p><p>Чтобы продолжить позже, сохраните настройки. Файл можно загрузить обратно в эту программу.</p><p class="hint">Для выхода используйте кнопку «Выйти». После закрытия всех вкладок программа завершится примерно через 5 минут.</p><button id="help-done" class="primary">Понятно, создаём</button></dialog>
+<dialog id="help-dialog"><button class="dialog-close" id="help-close" aria-label="Закрыть инструкцию">×</button><span class="eyebrow">НАЧНЁМ С ПРОСТОГО</span><h2>Ваша первая бусина</h2><ol><li><strong>Выберите форму.</strong> Выберите базовую, рельефную или фигурную бусину.</li><li><strong>Задайте ширину, высоту и отверстие.</strong> Потяните ползунок или введите число. Модель обновится сама.</li><li><strong>Нажмите «Файл для печати».</strong> Откройте STL в вашем слайсере: миллиметры, 100%, отверстие вертикально.</li></ol><p>STEP подходит для дальнейшей работы в 3D-редакторе. Кнопка Fusion скачивает скрипт с вашими параметрами; внутри ZIP есть инструкция запуска. Это не готовый файл F3D.</p><p>Чтобы продолжить позже, сохраните настройки. Файл можно загрузить обратно в эту программу.</p><p class="hint">Для выхода используйте кнопку «Выйти». После закрытия всех вкладок программа завершится примерно через 5 минут.</p><button id="help-done" class="primary">Понятно, создаём</button></dialog>
 <div id="toast" role="status" hidden></div>
 </body>
 </html>

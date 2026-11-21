@@ -1,4 +1,3 @@
-from dataclasses import asdict
 import io, json, zipfile
 import pytest
 import trimesh
@@ -9,9 +8,10 @@ from OCP.GProp import GProp_GProps
 from OCP.STEPControl import STEPControl_Reader
 from OCP.IFSelect import IFSelect_RetDone
 from bead_studio.cad import Settings,UserError,build,metrics,export,solid_count
+from bead_studio.model_spec import PRESETS
 from bead_studio.server import fusion_archive
 
-@pytest.mark.parametrize('shape',list('ABCDEFGH'))
+@pytest.mark.parametrize('shape',list(PRESETS))
 @pytest.mark.parametrize('changed',[False,True])
 def test_real_geometry_and_exports(shape,changed,tmp_path):
     s=Settings.read({'shape':shape,**({'diameter':15,'height':19,'bore':6.4,'twist':230,'depth':1.1} if changed else {})})
@@ -39,11 +39,12 @@ def test_real_geometry_and_exports(shape,changed,tmp_path):
 def test_bad_settings(bad):
     with pytest.raises(UserError):Settings.read(bad)
 
-def test_fusion_project_contains_selected_dimensions():
-    s=Settings.read({'shape':'F','height':20,'bore':6.4})
+@pytest.mark.parametrize('shape',['F','Q'])
+def test_fusion_project_contains_selected_dimensions(shape):
+    s=Settings.read({'shape':shape,'height':20,'bore':6.4})
     with zipfile.ZipFile(io.BytesIO(fusion_archive(s))) as z:
         config=json.loads(z.read('Paracord550/selection.json'))
-        assert config['shape']=='F' and config['values']['F_height']==20
+        assert config['shape']==shape and config['values'][f'{shape}_height']==20
         assert config['values']['bore']==6.4
         compile(z.read('Paracord550/Paracord550.py'),'fusion.py','exec')
         assert 'def models()' in z.read('Paracord550/model_spec.py').decode()

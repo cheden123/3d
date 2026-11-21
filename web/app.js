@@ -4,8 +4,10 @@ import {STLLoader} from './vendor/STLLoader.js';
 
 const $=id=>document.getElementById(id);
 const defaults={shape:'A',diameter:14,height:16,bore:6,depth:.9,twist:180,engraving:.65};
-const forms=[['A','Гладкая бочка','Плавные линии'],['B','Тактическая','10 канавок'],['C','Шестигранная','Чёткая форма'],['D','Спиральная','3 винтовые линии'],['E','Гранёная','12 граней'],['F','Руническая','Углублённый знак'],['G','Сегментированная','4 кольца'],['H','Коническая','Сужение к торцу']];
-const paths={A:'M8 8Q1 23 8 39Q16 44 24 39Q31 23 24 8Z',B:'M6 8H26V40H6ZM10 9V39M16 9V39M22 9V39',C:'M5 11L16 5 27 11V37L16 43 5 37ZM16 14V43M5 11L16 17 27 11',D:'M6 8H26V40H6ZM6 35 26 14M6 23 20 8M12 40 26 26',E:'M9 7H23L28 17V33L23 41H9L4 33V17ZM9 7 12 17V33L9 41M23 7 20 17V33L23 41M4 17H28M4 33H28',F:'M5 10 16 5 27 10V38L16 43 5 38ZM11 16V35M11 17 21 23M11 25 21 31',G:'M6 8H26V40H6ZM6 15H26M6 18H26M6 23H26M6 26H26M6 31H26M6 34H26',H:'M10 8H22L28 40H4Z'};
+const {shapes:forms}=await (await fetch("api/catalog")).json();
+const initialForm=forms.find(f=>f.id===defaults.shape);
+defaults.diameter=initialForm.diameter;defaults.height=initialForm.height;
+const sizeEdited={diameter:false,height:false};
 let settings={...defaults},sequence=0,timer,result=null,mesh=null,renderer=null,controls=null,scene,camera,grid,material;
 let toastTimer;
 let render=()=>{};
@@ -13,14 +15,34 @@ function toast(message){$('toast').textContent=message;$('toast').hidden=false;c
 function setStatus(text,busy=false){$('status').textContent=text;$('status').classList.toggle('busy',busy);}
 function downloads(enabled){for(const id of ['download-stl','download-step','download-fusion'])$(id).disabled=!enabled;}
 function format(n){return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});}
-function applySelection(){for(const b of document.querySelectorAll('.shape'))b.setAttribute('aria-pressed',b.dataset.shape===settings.shape);$('model-name').textContent=forms.find(f=>f[0]===settings.shape)[1];}
-for(const [key,name,desc] of forms){const b=document.createElement('button');b.type='button';b.className='shape';b.dataset.shape=key;b.title=name;b.setAttribute('aria-pressed',key==='A');b.innerHTML=`<svg viewBox="0 0 32 48" aria-hidden="true"><path d="${paths[key]}"/><ellipse cx="16" cy="8" rx="4" ry="2"/></svg><span>${key==='G'?'Сегменты':name}<small>${desc}</small></span>`;b.onclick=()=>{settings.shape=key;applySelection();detailControls();changed();};$('shapes').append(b);}
+function applySelection(){for(const b of document.querySelectorAll('.shape'))b.setAttribute('aria-pressed',b.dataset.shape===settings.shape);$('model-name').textContent=forms.find(f=>f.id===settings.shape).name;}
+function showGroup(group){for(const b of document.querySelectorAll('[data-group]'))b.setAttribute('aria-pressed',b.dataset.group===group);for(const b of document.querySelectorAll('.shape'))b.hidden=forms.find(f=>f.id===b.dataset.shape).group!==group;}
+for(const b of document.querySelectorAll('[data-group]'))b.onclick=()=>showGroup(b.dataset.group);
+$('shape-count').textContent=forms.length+' вариантов';
+const shortLabels={G:'Сегменты',M:'8 граней'};
+for(const form of forms){
+ const {id,name,description}=form;
+ const button=document.createElement('button');
+ button.type='button';button.className='shape';button.dataset.shape=id;button.title=name;
+ button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',id==='A');
+ const thumbnail=document.createElement('img');
+ thumbnail.src=`models/${id}.webp`;thumbnail.alt='';thumbnail.width=48;thumbnail.height=48;thumbnail.loading='lazy';
+ const label=document.createElement('span');label.textContent=shortLabels[id]||name;
+ const detail=document.createElement('small');detail.textContent=description;label.append(detail);
+ button.append(thumbnail,label);
+ button.onclick=()=>{
+  for(const key of ['diameter','height'])if(!sizeEdited[key])settings[key]=form[key];
+  settings.shape=id;syncControls();changed();
+ };
+ $('shapes').append(button);
+}
+showGroup('basic');
 function control(key,label,min,max,step,unit='мм',parent='size-controls'){
  const row=document.createElement('div');row.className='control';
  row.innerHTML=`<div class="control-top"><label for="${key}-number">${label}</label><div class="value-box"><input id="${key}-number" type="number" min="${min}" max="${max}" step="${step}" value="${settings[key]}" inputmode="decimal"><span>${unit}</span></div></div><input id="${key}-range" type="range" min="${min}" max="${max}" step="${step}" value="${settings[key]}" aria-label="${label}"><div class="limits"><span>${min} ${unit}</span><span>${max} ${unit}</span></div>`;
  $(parent).append(row);
  const number=$(key+'-number'),range=$(key+'-range');
- function update(source){const v=Number(source.value);if(source===range)number.value=range.value;else if(source.value!==''&&Number.isFinite(v))range.value=source.value;settings[key]=source.value===''?null:v;changed();}
+ function update(source){if(key in sizeEdited)sizeEdited[key]=true;const v=Number(source.value);if(source===range)number.value=range.value;else if(source.value!==''&&Number.isFinite(v))range.value=source.value;settings[key]=source.value===''?null:v;changed();}
  number.oninput=()=>update(number);range.oninput=()=>update(range);
 }
 function detailControls(){
@@ -29,7 +51,7 @@ function detailControls(){
  else if(settings.shape==='F'){control('engraving','Глубина орнамента',.3,1,.05,'мм','detail-controls');$('detail-note').textContent='Знак вырезан в поверхности бусины. Он будет виден на печати.';}
  else $('detail-note').textContent='У этой формы нет дополнительных настроек. Меняйте основные размеры выше.';
 }
-function syncControls(){for(const key of Object.keys(defaults)){if(key==='shape')continue;for(const suffix of ['number','range'])if($(key+'-'+suffix))$(key+'-'+suffix).value=settings[key];}applySelection();detailControls();}
+function syncControls(){for(const key of Object.keys(defaults)){if(key==='shape')continue;for(const suffix of ['number','range'])if($(key+'-'+suffix))$(key+'-'+suffix).value=settings[key];}applySelection();detailControls();showGroup(forms.find(f=>f.id===settings.shape).group);}
 for(const args of [['diameter','Ширина бусины',12,20,.1],['height','Высота бусины',12,24,.1],['bore','Размер отверстия',4,10,.1]])control(...args);
 detailControls();
 
@@ -67,16 +89,16 @@ async function generate(id){
   try{localStorage.setItem('bead-studio-v1',JSON.stringify(settings));}catch{}
  }catch(error){if(id!==sequence)return;result=null;downloads(false);$('verified').textContent='Нужна правка';$('error').textContent=error.message;$('error').hidden=false;setStatus('Проверьте настройки',true);}
 }
-$('reset').onclick=()=>{settings={...defaults,shape:settings.shape,height:settings.shape==='F'?18:16};syncControls();changed();};
+$('reset').onclick=()=>{const form=forms.find(f=>f.id===settings.shape);settings={...defaults,shape:form.id,diameter:form.diameter,height:form.height};sizeEdited.diameter=false;sizeEdited.height=false;syncControls();changed();};
 $('refresh').onclick=()=>{changed();clearTimeout(timer);generate(sequence);};
 function downloadFile(url){const a=document.createElement('a');a.href=url;a.download='';document.body.append(a);a.click();a.remove();}
 for(const [id,file] of [['download-stl','model.stl'],['download-step','model.step'],['download-fusion','fusion.zip']])$(id).onclick=()=>{if(!result)return;downloadFile(`files/${result.id}/${file}`);toast(file==='fusion.zip'?'Проект Fusion сохранён. Распакуйте ZIP и откройте START_HERE.txt.':'Файл передан браузеру для сохранения.');};
 $('save-project').onclick=()=>{if(!result){toast('Дождитесь готовой модели, затем сохраните настройки.');return;}const blob=new Blob([JSON.stringify({version:1,settings:result.settings},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Моя бусина.bead.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);};
 $('load-project').onclick=()=>$('project-file').click();
-$('project-file').onchange=async()=>{try{const file=$('project-file').files[0];if(!file)return;if(file.size>8192)throw new Error('Файл настроек слишком большой. Выберите файл .bead.json.');const data=JSON.parse(await file.text());if(data.version!==1||!data.settings||Array.isArray(data.settings)||typeof data.settings!=='object'||Object.keys(data.settings).length!==Object.keys(defaults).length||Object.keys(data.settings).some(k=>!(k in defaults))||!forms.some(f=>f[0]===data.settings.shape)||Object.entries(data.settings).some(([k,v])=>k!=='shape'&&(typeof v!=='number'||!Number.isFinite(v))))throw new Error('Это не файл настроек «Мастера бусин».');settings={...data.settings};syncControls();changed();toast('Настройки загружены.');}catch(e){toast(e.message==='Unexpected end of JSON input'?'Не удалось прочитать файл настроек.':e.message);}finally{$('project-file').value='';}};
+$('project-file').onchange=async()=>{try{const file=$('project-file').files[0];if(!file)return;if(file.size>8192)throw new Error('Файл настроек слишком большой. Выберите файл .bead.json.');const data=JSON.parse(await file.text());if(data.version!==1||!data.settings||Array.isArray(data.settings)||typeof data.settings!=='object'||Object.keys(data.settings).length!==Object.keys(defaults).length||Object.keys(data.settings).some(k=>!(k in defaults))||!forms.some(f=>f.id===data.settings.shape)||Object.entries(data.settings).some(([k,v])=>k!=='shape'&&(typeof v!=='number'||!Number.isFinite(v))))throw new Error('Это не файл настроек «Мастера бусин».');settings={...data.settings};sizeEdited.diameter=true;sizeEdited.height=true;syncControls();changed();toast('Настройки загружены.');}catch(e){toast(e.message==='Unexpected end of JSON input'?'Не удалось прочитать файл настроек.':e.message);}finally{$('project-file').value='';}};
 $('help').onclick=()=>$('help-dialog').showModal();for(const id of ['help-close','help-done'])$(id).onclick=()=>$('help-dialog').close();
 let alive=true;
 $('stop').onclick=async()=>{try{await post('api/stop',{});alive=false;document.body.classList.add('stopped');downloads(false);toast('Программа завершена. Эту вкладку можно закрыть.');}catch{toast('Программа уже завершена. Эту вкладку можно закрыть.');}};
 setInterval(()=>{if(alive)post('api/heartbeat',{}).catch(()=>{downloads(false);setStatus('Программа завершена. Запустите её заново.',true);});},15000);
-try{const saved=JSON.parse(localStorage.getItem('bead-studio-v1'));if(saved&&Object.keys(defaults).every(k=>k in saved)&&Object.keys(saved).every(k=>k in defaults)&&forms.some(f=>f[0]===saved.shape)){settings={...saved};syncControls();}}catch{}
+try{const saved=JSON.parse(localStorage.getItem('bead-studio-v1'));if(saved&&Object.keys(defaults).every(k=>k in saved)&&Object.keys(saved).every(k=>k in defaults)&&forms.some(f=>f.id===saved.shape)){settings={...saved};const preset=forms.find(f=>f.id===saved.shape);for(const k of ['diameter','height'])sizeEdited[k]=saved[k]!==preset[k];syncControls();}}catch{}
 applySelection();changed();

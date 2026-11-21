@@ -1,7 +1,6 @@
 """Exact OpenCascade solids, not decorative browser meshes."""
 import math
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeEdge, BRepBuilderAPI_MakeWire, BRepBuilderAPI_MakePolygon
 from OCP.BRepOffsetAPI import BRepOffsetAPI_ThruSections
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Cut
@@ -19,8 +18,7 @@ from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
 from OCP.IFSelect import IFSelect_RetDone
 from . import model_spec as spec
 
-NAMES = {'A':'Гладкая бочка','B':'Тактическая','C':'Шестигранная',
-         'D':'Спиральная','E':'Гранёная','F':'Руническая','G':'Сегментированная','H':'Коническая'}
+NAMES = {key: preset.name for key, preset in spec.PRESETS.items()}
 
 class UserError(ValueError):
     pass
@@ -42,7 +40,12 @@ class Settings:
         values=asdict(cls())
         values.update(data)
         if not isinstance(values['shape'],str) or values['shape'] not in NAMES:
-            raise UserError('Выберите одну из восьми форм.')
+            raise UserError('Выберите форму из каталога.')
+        preset = spec.PRESETS[values['shape']]
+        if 'diameter' not in data:
+            values['diameter'] = preset.diameter
+        if 'height' not in data:
+            values['height'] = preset.height
         ranges={'diameter':(12,20),'height':(12,24),'bore':(4,10),'depth':(.5,1.3),
                 'twist':(90,270),'engraving':(.3,1)}
         for key,(lo,hi) in ranges.items():
@@ -69,7 +72,9 @@ class Settings:
                         math.cos(math.pi/6)*(r-.6)-inner-.5),
                 'G':min(.85*r-inner,.88*r-inner-.5),
                 'H':.8*r-.5-inner-.5}
-        return limits[self.shape]
+        if self.shape in limits:
+            return limits[self.shape]
+        return spec.new_minimum_radius_fraction(self.shape)*r-inner-.5
 
     def parameters(self):
         return {f'{self.shape}_diameter':self.diameter,f'{self.shape}_height':self.height,
